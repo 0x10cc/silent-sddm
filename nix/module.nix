@@ -7,7 +7,7 @@
 }: let
   inherit (lib) map pipe flatten flip elem assertMsg;
   inherit (lib) mkIf mkEnableOption mkOption literalExpression;
-  inherit (lib.types) enum attrsWith path attrs package;
+  inherit (lib.types) enum attrsWith path attrs package str;
   inherit (lib.strings) removeSuffix;
   inherit (lib.attrsets) attrNames attrValues mapAttrs filterAttrs;
   inherit (lib.filesystem) listFilesRecursive;
@@ -79,6 +79,13 @@ in {
       description = "attrset containing <username>, <profile-img> map";
     };
 
+    extraGreeterEnvironment = mkOption {
+      type = str;
+      default = null;
+      example = "QT_SCREEN_SCALE_FACTORS=2,QT_FONT_DPI=192";
+      description = "extra greeter environment vars to set";
+    };
+
     settings = mkOption {
       type = attrs;
       default = {};
@@ -147,7 +154,12 @@ in {
       # required for styling the virtual keyboard
       settings = {
         General = {
-          GreeterEnvironment = "QML2_IMPORT_PATH=${silent'}/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard";
+          GreeterEnvironment =
+            builtins.concatStringsSep ","
+            (
+              ["QML2_IMPORT_PATH=${silent'}/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard"]
+              ++ lib.optional (!builtins.isNull cfg.extraGreeterEnvironment) cfg.extraGreeterEnvironment
+            );
           InputMethod = "qtvirtualkeyboard";
         };
       };
