@@ -34,6 +34,11 @@ https://github.com/user-attachments/assets/c90799f7-52bb-4c90-90db-4890281991c1
 </details>
 
 <details>
+  <summary>configs/everforest.conf</summary>
+<img src="https://github.com/uiriansan/SilentSDDM/blob/main/docs/previews/everforest.png" width="100%" />
+</details>
+
+<details>
   <summary>configs/catppuccin-latte.conf</summary>
 <img src="https://github.com/uiriansan/SilentSDDM/blob/main/docs/previews/catppuccin-latte.png" width="100%" />
 </details>
@@ -53,6 +58,11 @@ https://github.com/user-attachments/assets/c90799f7-52bb-4c90-90db-4890281991c1
 <img src="https://github.com/uiriansan/SilentSDDM/blob/main/docs/previews/catppuccin-mocha.png" width="100%" />
 </details>
 
+<details>
+  <summary>configs/nord.conf</summary>
+<img src="https://github.com/uiriansan/SilentSDDM/blob/main/docs/previews/nord.png" width="100%" />
+</details>
+
 [`Customization guide`](#Customizing)
 
 # Dependencies
@@ -62,9 +72,10 @@ https://github.com/user-attachments/assets/c90799f7-52bb-4c90-90db-4890281991c1
 - qt6-svg;
 - qt6-virtualkeyboard
 - qt6-multimedia
+- qt6-imageformats
 
 # Installation
-[`Install script`](#Install-script) [`AUR packages for Arch`](#AUR-packages-for-arch) [`NixOS flake`](#NixOS-flake) [`Manual installation`](#Manual-installation)
+[`Install script`](#Install-script) [`AUR packages`](#AUR-packages-for-arch) [`GURU package`](#GURU-package-for-gentoo) [`NixOS flake`](#NixOS-flake) [`Manual installation`](#Manual-installation) [`Pling/KDE Store`](#plingkde-store)
 
 ## Install script
 Just clone the repo and run the script:
@@ -78,23 +89,30 @@ git clone -b main --depth=1 https://github.com/uiriansan/SilentSDDM && cd Silent
 
 ## AUR packages for Arch
 If you run Arch Linux, consider installing one of the AUR packages:
+
+##### [`Stable version`](https://aur.archlinux.org/packages/sddm-silent-theme):
 ```bash
-# stable version
 yay -S sddm-silent-theme
-# git version
+```
+##### [`Git version`](https://aur.archlinux.org/packages/sddm-silent-theme-git):
+```bash
 yay -S sddm-silent-theme-git
 ```
 Then, replace the current theme and set the environment variables in `/etc/sddm.conf`:
-```bash
+```
 sudoedit /etc/sddm.conf
+```
 
-    # Make sure these options are correct:
-    [General]
-    InputMethod=qtvirtualkeyboard
-    GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
+```bash
 
-    [Theme]
-    Current=silent
+
+# Make sure these options are correct:
+[General]
+InputMethod=qtvirtualkeyboard
+GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
+
+[Theme]
+Current=silent
 ```
 Finally, test the theme to make sure everything is working:
 ```bash
@@ -104,6 +122,37 @@ cd /usr/share/sddm/themes/silent/
 > [!IMPORTANT]
 > Refer to the [snippets page](https://github.com/uiriansan/SilentSDDM/wiki/Snippets) if something goes wrong and [open an issue](https://github.com/uiriansan/SilentSDDM/issues/new/choose) if you don't find the solution there.
 
+## GURU package for Gentoo
+If you run Gentoo linux, consider installing the GURU package
+
+1. Enable the GURU repository
+```bash
+emerge -av eselect-repository
+eselect repository enable guru
+emaint sync -r guru
+```
+
+2. Unmask the required packages. Add this to your packages.accept_keywords:
+```
+# for the git version use
+# x11-misc/silent-sddm-theme **
+x11-misc/silent-sddm-theme ~amd64
+media-fonts/redhat ~amd64
+```
+
+3. Install SilentSDDM
+```bash
+emerge -av x11-misc/silent-sddm-theme
+```
+
+4. Add the following to /etc/sddm.conf and restart SDDM
+```
+[General]
+InputMethod=qtvirtualkeyboard
+GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
+[Theme]
+Current=silent
+```
 
 ## NixOS flake
 For NixOS with flakes enabled, first include this flake into your flake inputs:
@@ -115,43 +164,29 @@ inputs = {
    };
 };
 ```
-Then you may configure sddm like so to use the theme:
+
+Next, import the default nixosModule and set the enable option
 ```nix
 {
-  pkgs,
   inputs,
   ...
-}: let
-   # an exhaustive example can be found in flake.nix
-   sddm-theme = inputs.silentSDDM.packages.${pkgs.system}.default.override {
-      theme = "rei"; # select the config of your choice
-   };
-in  {
-   # include the test package which can be run using test-sddm-silent
-   environment.systemPackages = [sddm-theme sddm-theme.test];
-   qt.enable = true;
-   services.displayManager.sddm = {
-      package = pkgs.kdePackages.sddm; # use qt6 version of sddm
-      enable = true;
-      theme = sddm-theme.pname;
-      # the following changes will require sddm to be restarted to take
-      # effect correctly. It is recomend to reboot after this
-      extraPackages = sddm-theme.propagatedBuildInputs;
-      settings = {
-        # required for styling the virtual keyboard
-        General = {
-          GreeterEnvironment = "QML2_IMPORT_PATH=${sddm-theme}/share/sddm/themes/${sddm-theme.pname}/components/,QT_IM_MODULE=qtvirtualkeyboard";
-          InputMethod = "qtvirtualkeyboard";
-        };
-      };
-   };
+}: {
+    imports = [inputs.silentSDDM.nixosModules.default];
+    programs.silentSDDM = {
+        enable = true;
+        theme = "rei";
+        # settings = { ... }; see example in module
+    };
 }
 ```
-The above example includes the test script (`sddm-theme.test`) into your
-systemPackages, which lets you test the theme by running `test-sddm-silent`.
-However, it is optional and can be omitted
 
-> For a more exhaustive example look at the example package in [flake.nix](https://github.com/uiriansan/SilentSDDM/blob/main/flake.nix).
+That's it! SilentSDDM should now be installed and configured.
+You may now run the `test-sddm-silent` executable for testing.
+For further configuration read the [module](./nix/module.nix) option descriptions and examples.
+
+> [!NOTE]
+> Since the module adds extra dependencies to SDDM, 
+> you may need to restart for the theme to work correctly.
 
 ### Local development and testing under nix
 First git clone the repository and cd into the resulting directory
@@ -177,25 +212,25 @@ nix run .#test
 #### Arch Linux
 
 ```bash
-sudo pacman -S --needed sddm qt6-svg qt6-virtualkeyboard qt6-multimedia-ffmpeg
+sudo pacman -S --needed sddm qt6-svg qt6-virtualkeyboard qt6-multimedia-ffmpeg qt6-imageformats
 ```
 
 #### Void Linux
 
 ```bash
-sudo xbps-install sddm qt6-svg qt6-virtualkeyboard qt6-multimedia
+sudo xbps-install sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6-imageformats
 ```
 
 #### Fedora
 
 ```bash
-sudo dnf install sddm qt6-qtsvg qt6-qtvirtualkeyboard qt6-qtmultimedia
+sudo dnf install sddm qt6-qtsvg qt6-qtvirtualkeyboard qt6-qtmultimedia qt6-qtimageformats
 ```
 
 #### OpenSUSE
 
 ```bash
-sudo zypper install sddm-qt6 libQt6Svg6 qt6-virtualkeyboard qt6-virtualkeyboard-imports qt6-multimedia qt6-multimedia-imports
+sudo zypper install sddm-qt6 libQt6Svg6 qt6-virtualkeyboard qt6-virtualkeyboard-imports qt6-multimedia qt6-multimedia-imports qt6-imageformats
 ```
 
 ### 2. Clone this repo:
@@ -228,15 +263,20 @@ sudo cp -r /usr/share/sddm/themes/silent/fonts/* /usr/share/fonts/
 ### 6. Replace the current theme and set the environment variables in `/etc/sddm.conf`:
 ```bash
 sudoedit /etc/sddm.conf
-
-    # Make sure these options are correct:
-    [General]
-    InputMethod=qtvirtualkeyboard
-    GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
-
-    [Theme]
-    Current=silent
 ```
+
+```bash
+# Make sure these options are correct:
+[General]
+InputMethod=qtvirtualkeyboard
+GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
+
+[Theme]
+Current=silent
+```
+
+## Pling/KDE Store
+The theme is also available in [Planet Linux'ing Groups](https://www.pling.com/p/2298627/) & [KDE Store](https://store.kde.org/p/2298627).
 
 # Customizing
 
@@ -268,5 +308,3 @@ There are some extra tips on how to customize the theme on the [snippets page](h
 - [MoeWalls](https://moewalls.com/anime/ken-kaneki-tokyo-ghoul-re-3-live-wallpaper/): background;
 - [MoeWalls](https://moewalls.com/anime/anime-girl-nissan-silvia-live-wallpaper/): background;
 - [iconify.design](https://iconify.design/): icons
-
-I couldn't find the source of some of the images used here. [E-mail me](mailto:uiriansan@gmail.com?subject=Background%20image%20in%20SilentSDDM) if you are the creator and want it removed or acknowledged.

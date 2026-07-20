@@ -83,6 +83,7 @@ QtObject {
     property int avatarInactiveBorderSize: config.intValue("LoginScreen.LoginArea.Avatar/inactive-border-size") // @desc:Border size of the non-selected avatars.
     property color avatarActiveBorderColor: config.stringValue("LoginScreen.LoginArea.Avatar/active-border-color") || "#FFFFFF" // @desc:Border color of the selected user's avatar.
     property color avatarInactiveBorderColor: config.stringValue("LoginScreen.LoginArea.Avatar/inactive-border-color") || "#FFFFFF" // @desc:Border color of the non-selected avatars.
+    property bool avatarAlwaysActive: config['LoginScreen.LoginArea.Avatar/always-active'] === "true" ? true : false // @desc:Whether or not to always show the user selector. @default:false
 
     // [LoginScreen.LoginArea.Username]
     property string usernameFontFamily: config.stringValue("LoginScreen.LoginArea.Username/font-family") || "RedHatDisplay" // @desc:Font family used for the username.
@@ -107,7 +108,8 @@ QtObject {
     property int passwordInputBorderRadiusLeft: config.intValue("LoginScreen.LoginArea.PasswordInput/border-radius-left") // @desc:Left border radius of the password field.
     property int passwordInputBorderRadiusRight: config.intValue("LoginScreen.LoginArea.PasswordInput/border-radius-right") // @desc:Right border radius of the password field.
     property int passwordInputMarginTop: config.intValue("LoginScreen.LoginArea.PasswordInput/margin-top") // @desc:Distance of the password field/login button from the username.
-
+    property string passwordInputMaskedCharacter: config.stringValue("LoginScreen.LoginArea.PasswordInput/masked-character") || "●" // @desc:Customized masked character of the password.
+    
     // [LoginScreen.LoginArea.LoginButton]
     property color loginButtonBackgroundColor: config.stringValue("LoginScreen.LoginArea.LoginButton/background-color") || "#FFFFFF" // @desc:Background color of the login button.
     property real loginButtonBackgroundOpacity: config.realValue("LoginScreen.LoginArea.LoginButton/background-opacity") // @possible:0.0 ≤ R ≤ 1.0 @desc:Opacity of the background of the login button.
@@ -258,6 +260,7 @@ QtObject {
     property color virtualKeyboardPrimaryColor: config.stringValue("LoginScreen.VirtualKeyboard/primary-color") || "#000000" // @desc:Color of the icon/text in special keys when they're active.
     property int virtualKeyboardBorderSize: config.intValue("LoginScreen.VirtualKeyboard/border-size") // @desc:Border size of the virtual keyboard and its keys.
     property color virtualKeyboardBorderColor: config.stringValue("LoginScreen.VirtualKeyboard/border-color") || "#000000" // @desc:Color of the border of the virtual keyboard and its keys.
+    property string virtualKeyboardRestrictInput: config.stringValue("LoginScreen.VirtualKeyboard/restrict-input") || "none" // @possible: 'none' | 'digits' @desc: Default layout of the virtual keyboard.<br/><br/>**Warning!** Make sure not to set this option to `digits` if you got a user whose password contains letters/symbols.
 
     // [Tooltips]
     property bool tooltipsEnable: config['Tooltips/enable'] === "false" ? false : true // @desc:Whether or not to show tooltips when hovering over buttons.
